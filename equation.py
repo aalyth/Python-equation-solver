@@ -1,5 +1,6 @@
 import re
 import optimizing as opt
+import solving as s
 
 class Equation():
     def __init__(self, expression):
@@ -41,4 +42,4 @@ class Equation():
         self.right_side = '0'
         #print(self.left_side)
 
-Equation('x^2 + 4x  + 5 = 2x^2 - 5x - 11')
+#s.quadratic_equation(Equation('x^2 + 4x  + 5 = 2x^2 - 5x - 11').left_side)

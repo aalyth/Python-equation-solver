@@ -1,48 +1,105 @@
 import re
 #import equation as eq
+import classes as c
 
-# stands for "string function"
-def str_func(string1, string2, function):
-    return str(function(int(string1), int(string2)))
-
-# doing math stuff with objects of class unit
-def unit_math(unit1, unit2, function):
-    if unit1.suffix == unit2.suffix and type(unit1) == Unit and type(unit2) == Unit:
-        return Unit(str(function(unit1.value(), unit2.value())) + unit1.suffix)
-    else: return None
-
-class Unit():
-    def __init__(self, string):
-        if re.findall(r'([a-z](\^\d+)?)', string) != []:
-            self.suffix = re.findall(r'([a-z](\^\d+)?)', string)[0][0]
-        else:
-            self.suffix = ''
-        self.prefix = re.sub(r'([a-z](\^\d+)?)', '', string)
-
-    def __add__(self, other):
-        return unit_math(self, other, lambda x,y: x + y)
-
-    def __sub__(self, other):
-        return unit_math(self, other, lambda x,y: x - y)
-
-    def value(self):
-        if self.prefix == '':
-            return 1
-        elif self.prefix == '-':
-            return -1
-        elif self.prefix[0] == '-' and self.prefix[1:].isdigit():
-            return -int(self.prefix[1:])
-        elif self.prefix.isdigit():
-            return int(self.prefix)
-
-# for easier testing
-    def __repr__(self):
-        return str(self.prefix) + str(self.suffix)
-
-def split_equation(equation_string):
+def split_equation(equation_string): 
     return re.findall(r'\-?[^\+\-]+', equation_string)
 
-def optimize_unit_list(unit_list):
+def split_parenthesis(equation_string): # it is similar to split_equation but it groups the elements by parenthesis
+    equation_string = split_equation(equation_string)
+    result = [equation_string[0]]
+    
+    def get_parenthesis_diff(string):
+        return len(re.findall(r"\(", string)) - len(re.findall(r"\)", string))
+
+    inside_parenthesis = get_parenthesis_diff(result[0]) # the number of parenthesis we're in currently
+    for i in equation_string[1:]:
+        if inside_parenthesis != 0:
+            if i[0] != '-':
+                result[-1] += '+'
+            result[-1] += i
+        else:
+            result.append(i)
+        inside_parenthesis += get_parenthesis_diff(i)
+
+    return result
+
+def calculate(operand1, operand2, operator):
+    if operator == '+':
+        return operand1 + operand2
+    elif operator == '-':
+        return operand1 - operand2
+    elif operator == '*':
+        return operand1 * operand2
+    elif operator == '^':
+        return operand1 ** operand2
+
+def split_operations(equation):
+    # this is a fairly complex regex but it's idea is simple
+    # 1. match any operator (-, +, *, ^, (, )), where it matches the '-' only when it's used for subtraction
+    # 2. match a positive element - for example '5xy', 'y', '2w'
+    # 3. match every negative element (when it's surrounded in brackets)
+    result = [i[0] for i in re.findall(r"(([\+\*\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
+    return [i for i in result if i != '']
+
+def RPN(expression): # RPN stands for Reverse Polish Notation
+    # this is the Shunting-yard algorithm
+    expression = split_parenthesis(expression)
+    result = []
+    operators = {
+        '+': [1, 'L'],
+        '-': [1, 'L'],
+        '*': [2, 'L'],
+        '^': [3, 'R']
+    }
+
+    for i in expression:
+        i = split_operations(i)
+        temp = []
+        operator_stack = []
+        for j in i:
+            if j not in ['+', '-', '*', '^', '(', ')']:
+                temp.append(j)
+            elif j in operators.keys():
+                while operator_stack != [] and (operators[operator_stack[-1]][0] > operators[j][0] or (operators[operator_stack[-1]][0] > operators[j][0] and operators[j][1] == 'L')) and operators[operator_stack[-1]][1] != 'R':
+                    temp.append(operator_stack.pop(0))
+                operator_stack.insert(0, j)
+            elif j == '(':
+                operator_stack.insert(0, j)
+            elif j == ')':
+                for i in range(len(operator_stack)):
+                    if operator_stack[0] == '(':
+                        operator_stack.pop(0)
+                        break
+                    else:
+                        temp.append(operator_stack.pop(0))
+        while operator_stack != []:
+            temp.append(operator_stack.pop(0))
+        result.append(temp)
+        
+    return result
+
+def solve_RPN(expression): # here we optimize the equation based on the RPN 
+    # test equation - "5x^(2*2^(20-4*5))+5x-10.5+11x"
+    expression = RPN(expression)
+    print(expression)
+    for i in range(len(expression)):
+        if len(expression[i]) < 3:
+            break
+        stack = []
+        for j in range(len(expression[i])):
+            if expression[i][j] in ['+', '-', '*', '^']:
+                if j == len(expression[i]) - 1 and expression[i][j] == '^':
+                    stack.insert(1, '^')
+                    break
+                stack[-2] = calculate(stack[-2], stack[-1], expression[i][j])
+                stack.pop(len(stack) - 1)
+            else:
+                stack.append(c.Expression(expression[i][j]))
+        expression[i] = stack
+    return expression
+
+def optimize_equation(unit_list):
     made_changes = True
     while made_changes:
         made_changes = False
@@ -57,43 +114,50 @@ def optimize_unit_list(unit_list):
                     break
 
     if made_changes:
-        optimize_unit_list(unit_list)
+        optimize_equation(unit_list)
     else:
         return unit_list
+
+def reconstruct_operations(rpn_list):
+    result = ''.join(str(i) for i in rpn_list[0])
+
+    for i in rpn_list[1:]:
+        for j in range(len(i)):
+                if j == 0 and len(i) > 1:
+                    if i[1] == '-':
+                        result += '-' + i[j]
+                        break
+                    else:
+                        result += '+' + i[j]
+                else:
+                    result += '+' + i[j]
+    
+    return result
 
 def reconstruct_equation(unit_list):
     result = ''
     if unit_list[0].value() == -1:
-        result += '-' + unit_list[0].suffix
+        result += '-' + unit_list[0].get_suffix()
     elif unit_list[0].value() == 1:
-        result += unit_list[0].suffix
+        result += unit_list[0].get_suffix()
     else:
-        result += unit_list[0].prefix + unit_list[0].suffix
+        result += unit_list[0].prefix + unit_list[0].get_suffix()
 
     for i in unit_list[1:]:
         if i.value() == 1:
-            result += '+' + i.suffix
+            result += '+' + i.get_suffix()
         elif i.value() == -1:
-            result += '-' + i.suffix
+            result += '-' + i.get_suffix()
         elif i.value() > 1:
-            result += '+' + i.prefix + i.suffix
+            result += '+' + i.prefix + i.get_suffix()
         else:
-            result += i.prefix + i.suffix
+            result += i.prefix + i.get_suffix()
 
     return result
 
 def optimize(equation_left_side):
-    units = [Unit(i) for i in split_equation(equation_left_side)]
-    #print(units)
-    units = optimize_unit_list(units)
-    #print(units)
+    units = [c.Unit(i) for i in split_equation(equation_left_side)]
+    units = optimize_equation(units)
     return reconstruct_equation(units)
-    #print(equation.left_side)
 
-u1 = Unit('10x^2')
-u2 = Unit('5x')
-u3 = Unit('5x^2')
-u4 = Unit('7x^2')
-#u5 = Unit((u1 + u3) + u1.suffix)
-#print(u1 + u2)
 #print(optimize(eq.Equation('x^2 - 2x^2 + 4x + 5x + 5 + 11 = 0')))
