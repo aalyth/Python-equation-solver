@@ -1,5 +1,6 @@
 import re
 import math
+import numpy as np
 
 def get_variable(equation):
     for i in equation:
@@ -12,20 +13,22 @@ def quadratic_equation(equation):
 
     # here we get the values of a, b and c
     values = []
-    values.append(re.findall(r"(\d+(\.\d+)?)?[a-z]\^2", equation)) #a
-    values.append(re.findall(r"(\d+(\.\d+)?)?[a-z](?!\^)", equation)) #b
-    values.append(re.findall(r"((?<!\^)\d+(?![a-z]))", equation)) #c
+    values.append(re.findall(r"(\-?\d+(\.\d+)?)?[a-z]\^2", equation)) #a
+    values.append(re.findall(r"(\-?\d*(\.\d+)?)[a-z](?!\^)", equation)) #b
+    values.append(re.findall(r"((?<!\^)\-?\d+(\.\d+)?(?![a-z\.]))", equation)) #c
 
     for i in range(len(values)):
         if values[i] != []:
             values[i] = values[i][0][0]
-            if values[i] != '':
+            if values[i] not in ['-', '']:
                 values[i] = float(values[i])
-            else:
+            elif values[i] == '':
                 values[i] = 1
+            elif values[i] == '-':
+                values[i] = -1
         else:
             values[i] = 0
-
+    
     # now we apply the formula (-b ± sqrt(D)) / (2*a)
     # where D = b^2 - 4 * a * c
     D = values[1]**2 - 4 * values[0] * values[2]
@@ -100,30 +103,34 @@ def biquadratic_equation(equation):
 
 def sqrt_complex(expression):
     """
-    we will have √(real + imaginary) = a + bi
-    then: real + imaginary = (a + bi)^2 = a^2 + 2bi - b^2
-    so we'll solve the system in wich:
-    |a^2 + b^2 = real
-    |2abi = imaginary
-    and then we solve
+    the formula is:
+    we have the complex number w = x + yi
+    and it's square root sqrt(w) = z = a + bi
+    we have l = √(x^2 + y^2)
+    x = √((l + x) / 2)
+    y = sgn(x) * √((l - x) / 2)
     """
 
-    real = re.findall(r"(\-?\d*(\.\d+)?(?!i))", expression)[0][0]
-    imaginary = re.findall(r"(\-?\d*(\.\d)?i)", expression)[0][0]
-    if imaginary[:-1] == '-':
-        imaginary = '-1i'
-    elif imaginary[:-1] == '':
-        imaginary = '1i'
-
-    print(f"imaginary[:-1] = {imaginary[:-1]}")
-    sq_a = str(eval(f"{imaginary[:-1]}**2"))
-    # here we automatically multiply the equation by 2b^2 and we get:
-    # (imaginary (without i))^2 + 2b^4 = 2b^2 * real
-    print(f"we pass: {sq_a}+2b^4-{2*float(real)}b^2")
-    solutions_for_a = biquadratic_equation(f"{sq_a}+2b^4-{2*real}b^2")
-    solutions_for_a = [i[i.index("=")+2:] if re.search(r"=", i) else i for i in solutions_for_a.values() ]
-    print(f"solutions for {sq_a}+2b^4-{2*real}b^2 = {solutions_for_a}")
-
+    real = float(re.findall(r"(\-?\d*(\.\d+)?(?!i))", expression)[0][0])
+    if real == '':
+        real = 0
+    imaginary = re.findall(r"(\-?\d*(\.\d+)?)i", expression)[0][0]
+    if imaginary == '':
+        imaginary = 1
+    elif imaginary == '-':
+        imaginary = -1
+    else:
+        imaginary = float(imaginary)
+    
+    print(f"real = {real}, imaginary = {imaginary}")
+    temp = math.sqrt(real**2 + imaginary**2)
+    a = math.sqrt((temp + real) / 2)
+    b = np.sign(real) * math.sqrt((temp - real) / 2)
+    print(f"temp = {temp}, a = {a}, b = {b}")
+    if b < 0:
+        return f"{a} - {-b}i"
+    else:
+        return f"{a} + {b}i"
 
 #print(quadratic_equation('5b^2-15b-468'))
 #print(biquadratic_equation('5x^4+7x^2-18'))

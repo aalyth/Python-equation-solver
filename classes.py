@@ -2,7 +2,7 @@ import re
 
 # doing math stuff with objects of class unit
 def unit_math(unit1, unit2, function):
-    if unit1.suffix == unit2.suffix:
+    if unit1.compare_suffix(unit2):
         return Unit(str(function(unit1.value(), unit2.value())) + unit1.get_suffix_str())
     else: 
         return None
@@ -53,13 +53,19 @@ class Unit():
 
     def __add__(self, other):
         if type(other) == Unit:
-            return unit_math(self, other, lambda x,y: x + y)
+            result =  unit_math(self, other, lambda x,y: x + y)
+            if result != None and float(result.prefix) == 0: # in case we add with a negative number
+                result.suffix = []
+            return result
         else:
             return f"{str(self)}+{str(other)}"
 
     def __sub__(self, other):
         if type(other) == Unit:
-            return unit_math(self, other, lambda x,y: x - y)
+            result = unit_math(self, other, lambda x,y: x - y)
+            if result != None and float(result.prefix) == 0:
+                result.suffix = []
+            return result
         else:
             return f"{str(self)}-{str(other)}"
 
@@ -107,6 +113,25 @@ class Unit():
         else:
             return False
 
+    def __gt__(self, other): # was going to be used, but don't want to delete it
+    # we prio like the following - x^3 > x^2 > xy^3 > x^2y > xy > 5
+        if type(other) in [int, float]:
+            if self.suffix == []:
+                return float(self.prefix) == other
+            else:
+                return False
+
+        elif type(other) == Unit:
+            if len(self.suffix) < len(other.suffix):
+                return True
+            else:
+                self_power = sum([i.power for i in self.suffix])
+                other_power = sum([i.power for i in self.suffix])
+                return self_power > other_power
+        
+        else:
+            return False
+
     def value(self):
         if self.prefix == '':
             return 1
@@ -129,6 +154,9 @@ class Unit():
         else:
             return False
 
+    def power(self):
+        return sum([i.power for i in self.suffix])
+
 class Expression:
     def __init__(self, expression):
         self.units = []
@@ -144,18 +172,23 @@ class Expression:
                     self.units[i] = temp
                     unique = False
                     break
+
             if unique:
                 self.units.append(other)
             return self
+
         elif type(other) == Expression:
             for i in range(len(other.units)):
                 for j in range(len(self.units)):
                     if self.units[j].compare_suffix(other.units[i]):
                         self.units[j] += other.units[i]
                         break
+
                     elif j == len(self.units) - 1 and not self.units[j].compare_suffix(other.units[i]):
                         self.units.append(other.units[i])
+
             return self
+
         else:
             return None
 
@@ -168,18 +201,23 @@ class Expression:
                     self.units[i] = temp
                     unique = False
                     break
+
             if unique:
                 self.units.append(Unit(f"-{other.prefix}{other.get_suffix()}"))
             return self
+
         elif type(other) == Expression:
             for i in range(len(other.units)):
                 for j in range(len(self.units)):
                     if self.units[j].compare_suffix(other.units[i]):
                         self.units[j] -= other.units[i]
                         break
+
                     elif j == len(self.units) - 1 and not self.units[j].compare_suffix(other.units[i]):
                         self.units.append(Unit(f"-{other.units[i].prefix}{other.units[i].get_suffix_str()}"))
+            
             return self
+
         else:
             return None
 
@@ -188,21 +226,25 @@ class Expression:
             for i in range(len(self.units)):
                 self.units[i] = self.units[i] * other
             return self
+
         elif type(other) in [Expression, list]:
             result = []
             for i in self.units:
                 if type(other) == Expression:
                     for j in other.units:
                         result.append(i * j)
+
                 else:
                     for j in other:
                         result.append(i * j)
+
             self.units = result
             return self
 
     def __pow__(self, other):
-        if re.search(r"[a-z]", str(self)):
+        if re.search(r"[a-z]", str(other)):
             raise SyntaxError("Incorrect usage of the power operator")
+
         if type(other) in [str, int, float]:
             other = int(other)
             if other == 0:
@@ -211,12 +253,15 @@ class Expression:
                 temp = self.get_units()
                 for i in range(other - 1):
                     self = self * temp
+
                 return self
             elif other < 0:
                 return Expression(f"{1/int(str((self**(-other))))}")
+
         elif type(other) == Expression:
             other = int(float(other.units[0].prefix))
             return self ** other
+
         else:
             return Expression("1")
 
