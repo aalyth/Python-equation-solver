@@ -10,11 +10,15 @@ def get_variable(equation):
 def quadratic_equation(equation):
     # I use the formula ax^2 + bx + c = 0 as an example
     result = {}
+    
+    variable = get_variable(equation)
 
     # here we get the values of a, b and c
     values = []
     values.append(re.findall(r"(\-?\d+(\.\d+)?)?[a-z]\^2", equation)) #a
+    equation = re.sub(r"(\-?\d+(\.\d+)?)?[a-z]\^2", '', equation)
     values.append(re.findall(r"(\-?\d*(\.\d+)?)[a-z](?!\^)", equation)) #b
+    equation = re.sub(r"(\-?\d*(\.\d+)?)[a-z](?!\^)", '', equation)
     values.append(re.findall(r"((?<!\^)\-?\d+(\.\d+)?(?![a-z\.]))", equation)) #c
 
     for i in range(len(values)):
@@ -29,10 +33,11 @@ def quadratic_equation(equation):
         else:
             values[i] = 0
     
+    print(f"values = {values}")
+
     # now we apply the formula (-b ± sqrt(D)) / (2*a)
     # where D = b^2 - 4 * a * c
     D = values[1]**2 - 4 * values[0] * values[2]
-    variable = get_variable(equation)
 
     def get_roots(a, b, d, sqrt_d, imaginary=False):
         if imaginary:
@@ -75,8 +80,11 @@ def quadratic_equation(equation):
 
 def biquadratic_equation(equation):
     variable = get_variable(equation)
-    equation = re.sub(r"[a-z]\^4", f"{variable}^2", re.sub(r"[a-z]\^2", f"{variable}", equation))
+    equation = re.sub(r"[a-z]\^2", f"{variable}", equation)
+    equation = re.sub(r"[a-z]\^4", f"{variable}^2", equation)
     solutions = quadratic_equation(equation)
+
+    print(solutions)
 
     result = {}
     for i in range(len(solutions)):

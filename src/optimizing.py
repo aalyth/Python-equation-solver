@@ -1,6 +1,5 @@
 import re
-#import equation as eq
-import classes as c
+import src.classes as c
 
 def split_equation(equation_string): 
     return re.findall(r'\-?[^\+\-]+', equation_string)
@@ -43,7 +42,9 @@ def split_operations(equation):
     # 1. match any operator (-, +, *, ^, (, )), where it matches the '-' only when it's used for subtraction
     # 2. match a positive element - for example '5xy', 'y', '2w'
     # 3. match every negative element (when it's surrounded in brackets)
-    result = [i[0] for i in re.findall(r"(([\+\*\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
+    
+    #result = [i[0] for i in re.findall(r"(([\+\*\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
+    result = [i[0] for i in re.findall(r"(([\+\*\(\)]|(?<!\()\-|(?<=\))\^)|(?<!\(\-)(\d*(\.\d+)?)([a-z](\^\d+)?)?|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
     return [i for i in result if i != '']
 
 def RPN(expression): # RPN stands for Reverse Polish Notation
@@ -59,6 +60,11 @@ def RPN(expression): # RPN stands for Reverse Polish Notation
 
     for i in expression:
         i = split_operations(i)
+        negative = False
+        if i[0] == '-':
+            i = i[1:]
+            negative = True
+
         temp = []
         operator_stack = []
         for j in i:
@@ -84,8 +90,11 @@ def RPN(expression): # RPN stands for Reverse Polish Notation
 
         while operator_stack != []:
             temp.append(operator_stack.pop(0))
+
+        if negative:
+            temp[0] = '-' + temp[0]
+
         result.append(temp)
-        
     return result
 
 def solve_RPN(expression): # here we optimize the equation based on the RPN 
@@ -101,9 +110,7 @@ def solve_RPN(expression): # here we optimize the equation based on the RPN
                 #print(f"stack = {stack}, operation = {expression[i][j]}")
                 if len(stack) == 1:
                     break
-                if j == len(expression[i]) - 1 and expression[i][j] == '^':
-                    stack.insert(1, '^')
-                    break
+
                 stack[-2] = calculate(stack[-2], stack[-1], expression[i][j])
                 stack.pop(len(stack) - 1)
             else:
@@ -151,22 +158,14 @@ def reconstruct_operations(rpn_list):
 
 def reconstruct_equation(unit_list):
     result = ''
-    if unit_list[0].value() == -1:
-        result += '-' + unit_list[0].get_suffix_str()
-    elif unit_list[0].value() == 1:
-        result += unit_list[0].get_suffix_str()
-    else:
-        result += unit_list[0].prefix + unit_list[0].get_suffix_str()
-
-    for i in unit_list[1:]:
-        if i.value() == 1:
-            result += '+' + i.get_suffix_str()
-        elif i.value() == -1:
-            result += '-' + i.get_suffix_str()
-        elif i.value() > 1:
-            result += '+' + i.prefix + i.get_suffix_str()
+    for i in unit_list:
+        if i.value() < 1:
+            result += str(i)
         else:
-            result += i.prefix + i.get_suffix_str()
+            result += '+' + str(i)
+
+    if result[0] == '+':
+        result = result[1:]
 
     return result
 

@@ -74,9 +74,9 @@ class Unit():
             return str(int(num)) if num == int(num) else str(num)
 
         if type(other) == str:
-            return Unit(is_round(float(self.prefix) * float(other)) + "".join(str(i) for i in self.suffix))
+            return Unit(is_round(float(self.value()) * float(other)) + "".join(str(i) for i in self.suffix))
         elif type(other) == Unit:
-            prefix = is_round(float(self.prefix) * float(other.prefix))
+            prefix = is_round(float(self.value()) * float(other.value()))
 
             suffix_symbols = {} # this represents the variables and their respective power
             self_symbols = set([i.symbol for i in self.suffix])
