@@ -19,5 +19,5 @@ It's important to note that the '^^' are necessary only due to how cmd works. An
 
 # List of features that are currently unavailable
 ## 1. The usage of variables for exponentiation - things like "5x^2y" would not work
-## 2. The division of other variables (a.k.a fractions) - things like "5x/2y" would not work
+## 2. The division of other variables - things like "5x/2y" would not work
 ## 3. Solutions to problems, other than quadratic and biquadratic equations
