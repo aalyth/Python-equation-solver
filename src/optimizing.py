@@ -2,7 +2,7 @@ import re
 import src.classes as c
 
 def split_equation(equation_string): 
-    return re.findall(r'\-?[^\+\-]+', equation_string)
+    return re.findall(r"\-?[^\+\-]+", equation_string)
 
 def split_parenthesis(equation_string): # it is similar to split_equation but it groups the elements by parenthesis
     equation_string = split_equation(equation_string)

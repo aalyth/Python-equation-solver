@@ -67,8 +67,8 @@ def quadratic_equation(equation):
         solutions = get_roots(values[0], values[1], D, temp, True)
 
     finally:
-        result.update({f'{variable}1' : solutions[0]})
-        result.update({f'{variable}2' : solutions[1]})
+        result.update({f"{variable}1" : solutions[0]})
+        result.update({f"{variable}2" : solutions[1]})
 
     return result
 

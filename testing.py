@@ -11,21 +11,21 @@ def check_solutions(equation, solutions):
     
     for i in solutions.values():
         if re.search(r"i", i[0]) == None:
-            temp = re.sub(f'{variable}', f'({round(float(i[0]), 5)})', eq.Equation(equation+'=0').left_side)
-            temp = re.sub(r'(?<=\d)\(', '*(', re.sub(r'\^', '**', temp))
+            temp = re.sub(f"{variable}", f"({round(float(i[0]), 5)})", eq.Equation(equation + "=0").left_side)
+            temp = re.sub(r"(?<=\d)\(", "*(", re.sub(r"\^", "**", temp))
             result.append(round(eval(temp), 1))
 
         else:
-            temp = re.sub(f'{variable}', f'({i[0]})', eq.Equation(equation+'=0').left_side)
-            temp = eq.Equation(temp+'=0').left_side
+            temp = re.sub(f"{variable}", f"({i[0]})", eq.Equation(equation + "=0").left_side)
+            temp = eq.Equation(temp + "=0").left_side
             temp = [c.Unit(i) for i in split_equation(temp)]
 
             # here we just remove all the imaginary parts
             for i in range(len(temp)):
                 if temp[i].get_suffix_str() != '':
-                    if re.search(r'i', str(temp[i].suffix[0])) and int(str(temp[i].suffix[0])[2]) % 4 == 0:
+                    if re.search(r"i", str(temp[i].suffix[0])) and int(str(temp[i].suffix[0])[2]) % 4 == 0:
                         temp[i] = c.Unit(str(temp[i].value()))
-                    elif re.search(r'i', str(temp[i].suffix[0])) and int(str(temp[i].suffix[0])[2]) % 2 == 0:
+                    elif re.search(r"i", str(temp[i].suffix[0])) and int(str(temp[i].suffix[0])[2]) % 2 == 0:
                         temp[i] = c.Unit(str(temp[i].value() * -1))
             temp = reconstruct_equation(temp)
             

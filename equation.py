@@ -6,6 +6,8 @@ import src.solving as s
 class Equation():
     def __init__(self, expression):
         self.expression = re.sub(r"[^\da-z\+\-\*\^\/\(\)\=\.]", '', expression)
+        self.expression = re.sub(r"\*\*", '^', expression)
+        
         try:
             self.left_side = re.findall(r'.+(?==)', self.expression)[0]
             self.right_side = re.findall(r'(?<==).+', self.expression)[0]
@@ -52,3 +54,5 @@ class Equation():
             pow1, pow2 = temp[2], temp[5]
             if pow1 == '4' and (pow2 == '' or pow2 == '2'):
                 return s.biquadratic_equation(equation)
+        else:
+            return None

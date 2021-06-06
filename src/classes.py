@@ -32,7 +32,7 @@ class Symbol():
     def __mul__(self, other):
         if type(other) == Symbol:
             if self.symbol == other.symbol:
-                return Symbol(self.symbol + "^" + str(self.power + other.power))
+                return Symbol(self.symbol + '^' + str(self.power + other.power))
             else:
                 return None
         else:
@@ -40,16 +40,16 @@ class Symbol():
 
 class Unit():
     def __init__(self, string):
-        if re.search(r'[a-z]', string):
-            temp = re.findall(r'([a-z](\^\d+)?)', string)
+        if re.search(r"[a-z]", string):
+            temp = re.findall(r"([a-z](\^\d+)?)", string)
             self.suffix = []
             for i in temp:
                 self.suffix.append(Symbol(i[0]))
         else:
             self.suffix = ''
 
-        self.prefix = re.sub(r'([a-z](\^\d+)?)', '', string)
-        if re.search(r'[^\d\-\.]+', self.prefix):
+        self.prefix = re.sub(r"([a-z](\^\d+)?)", '', string)
+        if re.search(r"[^\d\-\.]+", self.prefix):
             raise TypeError("Incorrect Unit declaration")
 
     def __add__(self, other):
@@ -92,7 +92,7 @@ class Unit():
                     if k.symbol == i:
                         suffix_symbols[i] += k.power
 
-            suffix = ""
+            suffix = ''
             for i in suffix_symbols:
                 if suffix_symbols[i] > 1:
                     suffix += f"{i}^{suffix_symbols[i]}"
@@ -158,7 +158,7 @@ class Unit():
         return [str(i) for i in self.suffix]
 
     def get_suffix_str(self):
-        return "".join(str(i) for i in self.suffix)
+        return ''.join(str(i) for i in self.suffix)
 
     def compare_suffix(self, other):
         if type(other) == Unit:
@@ -172,7 +172,7 @@ class Unit():
 class Expression:
     def __init__(self, expression):
         self.units = []
-        for i in re.findall(r'\-?[^\+\-]+', expression):
+        for i in re.findall(r"\-?[^\+\-]+", expression):
             self.units.append(Unit(i))
 
     def __add__(self, other):
@@ -303,7 +303,7 @@ class Expression:
                     result += str(i)
             return result
         else:
-            return ""
+            return ''
 
     def __repr__(self):
         return str(self)
