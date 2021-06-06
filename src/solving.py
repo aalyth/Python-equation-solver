@@ -51,8 +51,8 @@ def quadratic_equation(equation):
 
         if sqrt_d != int(sqrt_d): # if it's not a perfect square root we add the square root representation
             return [
-                (solution1, f"({-b} - √{-d}) / {2 * a}"),
-                (solution2, f"({-b} + √{-d}) / {2 * a}")
+                (solution1, f"({-b} - √{d}) / {2 * a}"),
+                (solution2, f"({-b} + √{d}) / {2 * a}")
             ]
             
         return [(solution1, ''), (solution2, '')]
