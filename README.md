@@ -8,7 +8,7 @@ If you want to integrate the program in your own code you can use the file "equa
 
 Example:
 
-![image](https://user-images.githubusercontent.com/61279622/120940403-ca7f7480-c725-11eb-8199-f0c1989fc6c5.png)
+![image](https://user-images.githubusercontent.com/61279622/120940474-2cd87500-c726-11eb-9785-388543c82b72.png)
 
 Now, you're probably wondering why there are 2 elements in the tuple with the solution - the reason being is that sometimes when a person is using the program there's a chance that they'll want the answer to be as precise as possible. Because of this, I've made it so if the square root is not round that there is also the precise answer (it's good to note that even if square root is round, the result is still in a tuple within a dictionary).
 
