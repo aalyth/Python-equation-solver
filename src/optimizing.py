@@ -30,21 +30,23 @@ def calculate(operand1, operand2, operator):
         return operand1 - operand2
     elif operator == '*':
         return operand1 * operand2
+    elif operator == '/':
+        return operand1 / operand2
     elif operator == '^':
         return operand1 ** operand2
 
 def split_operations(equation):
+    equation = re.sub(r"\-\(", "-1*(", equation) # we convert "-(x+5)" to "-1*(x+5)"
     equation = re.sub(r"\)\(", ")*(", equation) # if we have stuff like "(x+3)(x-3)" we make it to "(x+3)*(x-3)"
-    equation = re.sub(r"(?<=[^\+\-\*\^\)])\(", "*(", equation) # we convert "3x(x+3)" to "3x*(x+3)"
-    equation = re.sub(r"\)(?=[^\+\-\*\^\()])", ")*", equation) # we convert "(x+3)3x" to "(x+3)*3x"
+    equation = re.sub(r"(?<=[^\+\-\*\/\^\(\)])\(", "*(", equation) # we convert "3x(x+3)" to "3x*(x+3)"
+    equation = re.sub(r"\)(?=[^\+\-\*\/\^\()])", ")*", equation) # we convert "(x+3)3x" to "(x+3)*3x"
 
     # this is a fairly complex regex, but it's idea is simple
     # 1. match any operator (-, +, *, ^, (, )), where it matches the '-' only when it's used for subtraction
-    # 2. match a positive element - for example '5xy', 'y', '2w'
+    # 2. match a positive element - for example '5xy', 'y^2', '2w'
     # 3. match every negative element (when it's surrounded in brackets)
     
-    #result = [i[0] for i in re.findall(r"(([\+\*\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
-    result = [i[0] for i in re.findall(r"(([\+\*\(\)]|(?<!\()\-|(?<=\))\^)|(?<!\(\-)(\d*(\.\d+)?)([a-z](\^\d+)?)?|(?<=\()(\-\d*(\.\d+)?[a-z]*))", equation)]
+    result = [i[0] for i in re.findall(r"(([\+\*\/\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*(\^\d+)?|(?<=\()(\-\d*(\.\d+)?[a-z]*(\^\d+)?))", equation)]
     return [i for i in result if i != '']
 
 def RPN(expression): # RPN stands for Reverse Polish Notation
@@ -55,6 +57,7 @@ def RPN(expression): # RPN stands for Reverse Polish Notation
         '+': [1, 'L'],
         '-': [1, 'L'],
         '*': [2, 'L'],
+        '/': [2, 'L'],
         '^': [3, 'R']
     }
 
@@ -68,11 +71,10 @@ def RPN(expression): # RPN stands for Reverse Polish Notation
         temp = []
         operator_stack = []
         for j in i:
-            if j not in ['+', '-', '*', '^', '(', ')']:
+            if j not in ['+', '-', '*', '/', '^', '(', ')']:
                 temp.append(j)
 
             elif j in operators.keys():
-                #print(f"operator_stack = {operator_stack}")
                 while operator_stack != [] and operator_stack[0] != '(' and (operators[operator_stack[0]][0] > operators[j][0] or (operators[operator_stack[0]][0] == operators[j][0] and operators[j][1] == 'L')):
                     temp.append(operator_stack.pop(0))
                 operator_stack.insert(0, j)
@@ -97,17 +99,14 @@ def RPN(expression): # RPN stands for Reverse Polish Notation
         result.append(temp)
     return result
 
-def solve_RPN(expression): # here we optimize the equation based on the RPN 
-    # test equation - "5x^(2*2^(20-4*5))+5x-10.5+11x"
-    # another test equation - "5x*12-10.5*5+5x^(2*2^(20-4*5))+11x^(2(15^(-5x+5x)))"
+def solve_RPN(expression): # here we calculate the equation from the RPN
     expression = RPN(expression)
     for i in range(len(expression)):
         if len(expression[i]) < 3:
             continue
         stack = []
         for j in range(len(expression[i])):
-            if expression[i][j] in ['+', '-', '*', '^']:
-                #print(f"stack = {stack}, operation = {expression[i][j]}")
+            if expression[i][j] in ['+', '-', '*', '/', '^']:
                 if len(stack) == 1:
                     break
 
@@ -159,7 +158,7 @@ def reconstruct_operations(rpn_list):
 def reconstruct_equation(unit_list):
     result = ''
     for i in unit_list:
-        if i.value() < 1:
+        if i.value() < 0:
             result += str(i)
         else:
             result += '+' + str(i)
@@ -171,10 +170,49 @@ def reconstruct_equation(unit_list):
 
 def sort_equation(equation):
     equation = [c.Unit(i) for i in split_equation(equation)]
-    return sorted(equation, reverse = True, key = lambda unit: unit.power())            
+    result = []
+
+    #selection sort
+    for i in range(len(equation) - 1):
+        highest = equation[i]
+        highest_index = i
+        
+        for j in range(0, len(equation)):
+            if equation[j] > highest:
+                highest = equation[j]
+                highest_index = j
+
+        result.append(c.Unit(str(highest)))
+        equation[highest_index].suffix = []
+        equation[highest_index].prefix = ''
+    
+    for i in equation:
+        if i.suffix != [] and i.prefix != '':
+            result.append(c.Unit(str(i)))
+
+    return result
+
+def fix_looks(equation): # so we don't have stuff like '5.0x', '1y' and etc.
+    equation = [c.Unit(i) for i in split_equation(equation)]
+    result = ''
+
+    for i in equation:
+        if i.get_suffix_str() == '' and (i.value() == -1 or i.value() == 1):
+            result += f"{'-' if i.value() < 0 else '+'}{abs(int(i.value()))}"
+        elif i.value() == 1:
+            result += '+' + i.get_suffix_str()
+        elif i.value() == -1:
+            result += '-' + i.get_suffix_str()
+        else:
+            if int(i.value()) == i.value():
+                result += f"{'-' if i.value() < 0 else '+'}{abs(int(i.value()))}{i.get_suffix_str()}"
+            else:
+                result += f"{'-' if i.value() < 0 else '+'}{round(abs(i.value()), 10)}{i.get_suffix_str()}"
+    
+    return result[1:] if result[0] == '+' else result
 
 def optimize(equation):
     equation = reconstruct_operations(solve_RPN(equation))
     equation = [c.Unit(i) for i in split_equation(equation)]
     equation = optimize_equation(equation)
-    return reconstruct_equation(sort_equation(reconstruct_equation(equation)))
+    return fix_looks(reconstruct_equation(sort_equation(reconstruct_equation(equation))))

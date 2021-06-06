@@ -47,9 +47,10 @@ class Unit():
                 self.suffix.append(Symbol(i[0]))
         else:
             self.suffix = ''
+
         self.prefix = re.sub(r'([a-z](\^\d+)?)', '', string)
         if re.search(r'[^\d\-\.]+', self.prefix):
-            raise SyntaxError("Incorrect unit declaration")
+            raise TypeError("Incorrect Unit declaration")
 
     def __add__(self, other):
         if type(other) == Unit:
@@ -73,7 +74,7 @@ class Unit():
         def is_round(num): # if it's a round number we remove the .0
             return str(int(num)) if num == int(num) else str(num)
 
-        if type(other) == str:
+        if type(other) in [int, float]:
             return Unit(is_round(float(self.value()) * float(other)) + "".join(str(i) for i in self.suffix))
         elif type(other) == Unit:
             prefix = is_round(float(self.value()) * float(other.value()))
@@ -99,6 +100,19 @@ class Unit():
                     suffix += str(i)
             return Unit(prefix + suffix)
 
+    def __truediv__(self, other):
+        if type(other) == Unit:
+            if other.suffix != []:
+                raise TypeError("Dividing by variable(s)")
+            else:
+                return self / other.value()
+        elif type(other) in [int, float]:
+            self.prefix = str(self.value() / other)
+            return self
+        elif type(other) == str:
+            self.prefix = str(self.value() / float(other))
+            return self
+
     def __str__(self):
         return str(self.prefix) + "".join(str(i) for i in self.suffix)
 
@@ -122,12 +136,10 @@ class Unit():
                 return False
 
         elif type(other) == Unit:
-            if len(self.suffix) < len(other.suffix):
+            if len(self.suffix) < len(other.suffix) and self.power() >= other.power():
                 return True
             else:
-                self_power = sum([i.power for i in self.suffix])
-                other_power = sum([i.power for i in self.suffix])
-                return self_power > other_power
+                return self.power() > other.power()
         
         else:
             return False
@@ -241,11 +253,27 @@ class Expression:
             self.units = result
             return self
 
+    def __truediv__(self, other):
+        if type(other) == Unit:
+            if other.suffix != []:
+                raise TypeError("Dividing by variable(s)")
+            else:
+                return self / other.value()
+        elif type(other) in [float, int]:
+            for i in range(len(self.units)):
+                self.units[i] = self.units[i] / other
+            return self
+        elif type(other) == Expression:
+            if len(other.units) > 1 or other.units[0].get_suffix_str() != '':
+                raise TypeError("Incorrect usage of the division operator")
+            else:
+                return self / other.units[0].value()
+            
     def __pow__(self, other):
         if re.search(r"[a-z]", str(other)):
             raise SyntaxError("Incorrect usage of the power operator")
 
-        if type(other) in [str, int, float]:
+        if type(other) in [int, float]:
             other = int(other)
             if other == 0:
                 return Expression("1")
