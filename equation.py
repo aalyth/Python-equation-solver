@@ -7,12 +7,16 @@ class Equation():
     def __init__(self, expression):
         self.expression = re.sub(r"[^\da-z\+\-\*\^\/\(\)\=\.]", '', expression)
         self.expression = re.sub(r"\*\*", '^', expression)
-        
+        self.left_side = ''
+        self.simplified = ''
+        self.solution = {'': ('', '')}
+
         try:
             self.left_side = re.findall(r'.+(?==)', self.expression)[0]
             self.right_side = re.findall(r'(?<==).+', self.expression)[0]
             self.transfer_to_left_side()
             self.left_side = opt.optimize(self.left_side)
+            self.simplified = self.left_side + "=0"
             self.solution = self.solve()
 
         except IndexError:
@@ -55,4 +59,4 @@ class Equation():
             if pow1 == '4' and (pow2 == '' or pow2 == '2'):
                 return s.biquadratic_equation(equation)
         else:
-            return None
+            return {'': ('', '')}
