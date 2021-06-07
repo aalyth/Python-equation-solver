@@ -18,6 +18,6 @@ If you just want to quickly find a solution to a problem, run the "main.py" file
 It's important to note that the '^^' are necessary only due to how cmd works. Another thing to mention is that both the main.py file and the Equation class work even if you use '**' instead of '^' for exponentiation.
 
 # List of features that are currently unavailable
-## 1. The usage of variables for exponentiation - things like "5x^2y" would not work
-## 2. The division of other variables - things like "5x/2y" would not work
+## 1. The usage of variables for exponentiation - things like "5^2y" would not work
+## 2. The division by variables - things like "5/2y" would not work
 ## 3. Solutions to problems, other than quadratic and biquadratic equations
