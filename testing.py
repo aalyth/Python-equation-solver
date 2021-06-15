@@ -11,9 +11,9 @@ def check_solutions(equation, solutions):
     
     for i in solutions.values():
         if re.search(r"i", i[0]) == None:
-            temp = re.sub(f"{variable}", f"({round(float(i[0]), 5)})", eq.Equation(equation + "=0").left_side)
+            temp = re.sub(f"{variable}", f"({round(float(i[0]), 7)})", eq.Equation(equation + "=0").left_side)
             temp = re.sub(r"(?<=\d)\(", "*(", re.sub(r"\^", "**", temp))
-            result.append(round(eval(temp), 1))
+            result.append(round(eval(temp), 0))
 
         else:
             temp = re.sub(f"{variable}", f"({i[0]})", eq.Equation(equation + "=0").left_side)
