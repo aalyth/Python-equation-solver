@@ -21,4 +21,4 @@ It's important to note that the '^^' are necessary only due to how cmd works. An
 ## 1. The usage of variables for exponentiation - things like "5^2y" would not work
 ## 2. The division by variables - things like "5/2y" would not work
 ## 3. Solutions to problems, other than quadratic and biquadratic equations
-## Note: negative numbers should always be surrounded by parenthesis in order not to cause an error - for example: "(-5x)"
+## Note: negative numbers should always be surrounded by parenthesis in order not to cause an error - for example: "(-5x)*3y"
