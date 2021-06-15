@@ -46,7 +46,9 @@ def split_operations(equation):
     # 2. match a positive element - for example '5xy', 'y^2', '2w'
     # 3. match every negative element (when it's surrounded in brackets)
     
-    result = [i[0] for i in re.findall(r"(([\+\*\/\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*(\^\d+)?|(?<=\()(\-\d*(\.\d+)?[a-z]*(\^\d+)?))", equation)]
+    # the first regex matches things like x^2 together, but also 5^2 (which is not optimal, but I don't want to remove it yet)
+    #result = [i[0] for i in re.findall(r"(([\+\*\/\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*(\^\d+)?|(?<=\()(\-\d*(\.\d+)?[a-z]*(\^\d+)?))", equation)]
+    result = [i[0] for i in re.findall(r"(([\+\*\/\^\(\)]|(?<!\()\-)|(?<!\(\-)(\d*(\.\d+)?)[a-z]*|(?<=\()(\-\d*[a-z]*))", equation)]
     return [i for i in result if i != '']
 
 def RPN(expression): # RPN stands for Reverse Polish Notation
