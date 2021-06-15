@@ -8,7 +8,7 @@ If you want to integrate the program in your own code you can use the file "equa
 
 Example:
 
-![image](https://user-images.githubusercontent.com/61279622/120939428-b6854400-c720-11eb-81ff-ee08c28e57dd.png)
+![image](https://user-images.githubusercontent.com/61279622/120940474-2cd87500-c726-11eb-9785-388543c82b72.png)
 
 Now, you're probably wondering why there are 2 elements in the tuple with the solution - the reason being is that sometimes when a person is using the program there's a chance that they'll want the answer to be as precise as possible. Because of this, I've made it so if the square root is not round that there is also the precise answer (it's good to note that even if square root is round, the result is still in a tuple within a dictionary).
 
@@ -18,6 +18,6 @@ If you just want to quickly find a solution to a problem, run the "main.py" file
 It's important to note that the '^^' are necessary only due to how cmd works. Another thing to mention is that both the main.py file and the Equation class work even if you use '**' instead of '^' for exponentiation.
 
 # List of features that are currently unavailable
-## 1. The usage of variables for exponentiation - things like "5x^2y" would not work
-## 2. The division of other variables (a.k.a fractions) - things like "5x/2y" would not work
+## 1. The usage of variables for exponentiation - things like "5^2y" would not work
+## 2. The division by variables - things like "5/2y" would not work
 ## 3. Solutions to problems, other than quadratic and biquadratic equations
